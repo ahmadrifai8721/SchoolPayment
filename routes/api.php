@@ -1,0 +1,164 @@
+<?php
+
+use App\Models\AnggotaKelas;
+use App\Models\Kelas;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Number;
+use Illuminate\Support\Facades\Auth;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register API routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "api" middleware group. Make something great!
+|
+*/
+
+// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+//     return $request->user()->AnggotaKelas;
+// });
+route::post("User/{code}", function ($code) {
+    if ($code == "koalaToken") {
+
+        $userID = null;
+
+        $urlRombel = "http://" . env("DAPODIK_SERVER_IP") . ":" . env("DAPODIK_SERVER_PORT") .
+            "/WebService/getRombonganBelajar?npsn=" .
+            env("DAPODIK_SERVER_NPSN");
+        $getBodyRombel = Http::withHeaders([
+            'Authorization' => 'Bearer ' . env('DAPODIK_SERVER_Token'),
+        ])->get($urlRombel)->body();
+
+        $getBodyRombel = json_decode($getBodyRombel);
+        $getBodyRombel = $getBodyRombel->rows;
+
+        foreach ($getBodyRombel as $key => $value) {
+            if ($value->jenis_rombel == "1") {
+                $kelas = Kelas::updateOrCreate(["rombongan_belajar_id" => $value->rombongan_belajar_id], [
+                    "rombongan_belajar_id" => $value->rombongan_belajar_id,
+                    "kelas" => $value->nama,
+                ]);
+            }
+        }
+
+        $url = "http://" . env("DAPODIK_SERVER_IP") . ":" . env("DAPODIK_SERVER_PORT") .
+            "/WebService/getPesertaDidik?npsn=" .
+            env("DAPODIK_SERVER_NPSN");
+        $getBody = Http::withHeaders([
+            'Authorization' => 'Bearer ' . env('DAPODIK_SERVER_Token'),
+        ])->get($url)->body();
+        $log = [
+            "title" => "Selesai mengunduh Data Siswa Dari Dapodik",
+            "icon" => "mdi-database-arrow-down-outline",
+            "icon_color" => "success",
+            "time" => date("H:i:s:u"),
+        ];
+
+        $getBody = json_decode($getBody);
+        $getBody = $getBody->rows;
+
+        foreach ($getBody as $key => $value) {
+            $userID = User::updateOrCreate(["email" => $value->nisn . "@siswa.schpay.com"], [
+                "name" => $value->nama,
+                "nisn" => $value->nisn,
+                "jk" => $value->jenis_kelamin,
+                "tempatLahir" => $value->tempat_lahir,
+                "tanggalLahir" => $value->tanggal_lahir,
+                "email" => $value->nisn . "@siswa.schpay.com",
+                "nomerHP" => $value->nomor_telepon_seluler,
+                "alamat" => "Alamat Belum Diatur",
+                "isAdmin" => false,
+                "password" => bcrypt($value->nisn),
+            ]);
+            AnggotaKelas::updateOrCreate([
+                "rombongan_belajar_id" => $value->rombongan_belajar_id,
+                "user_id" => $userID->id,
+            ], [
+                "rombongan_belajar_id" => $value->rombongan_belajar_id,
+                "user_id" => $userID->id,
+            ]);
+        }
+
+
+        return response()->json([
+            "statusCode" => 200,
+            "message" => "Selesai Import Data Dari dapodik"
+        ]);
+    } else {
+        return response()->json([
+            "statusCode" => 401,
+            "message" => "Invalid credentials"
+        ], 401);
+    }
+})->name("apiUserImport");
+Route::get(
+    "User/{code}",
+    function ($code) {
+        if ($code == "koalaToken") {
+
+            $data = [];
+            $totalTagihan = 0;
+            $getUser = User::withTrashed()->get();
+            foreach ($getUser as $key => $value) {
+                # code...
+                # code...
+                foreach ($value->Tagihan as $key => $tagihan) {
+                    $totalTagihan = $tagihan->DaftarTagihan->sum('nominal');
+                }
+                // dump();
+                $data["data"][] = [
+                    $value->trashed() ? "$value->name <strong class='badge bg-danger'>Akun Terblokir</strong>" : $value->name,
+                    $value->isAdmin ? "Administrator" : $value->AnggotaKelas->Kelas->kelas,
+                    Number::currency($totalTagihan, "IDR"),
+                    Number::currency($value->Transaksi->where('status', "1")->sum("total"), "IDR"),
+                    $value->trashed() ? '
+                    <a href="#' . $value->name . '" class="action-icon"> <i class="uil-invoice"></i></a>
+                    <a href="' . route("user.show", $value->id) . '" class="action-icon"> <i class="uil-user"></i></a>
+                    <a href="' . route("user.restore", $value->id) . '" class="action-icon"> <i class="mdi mdi-delete-restore"></i></a>'
+                        : '
+                        <a href="' . $value->name . '" class="action-icon"> <i class="uil-invoice"></i></a>
+                        <a href="' . route("user.show", $value->id) . '" class="action-icon"> <i class="uil-user"></i></a>'
+                ];
+                $totalTagihan = 0;
+            }
+
+            $data["draw"] = 1;
+            $data["recordsTotal"] = User::count();
+            $data["recordsFiltered"] = User::count();
+
+            return response()->json($data);
+        } else {
+            return response()->json([
+                "statusCode" => 401,
+                "message" => "Invalid credentials"
+            ], 401);
+        }
+    }
+)->name("apiUser");
+
+
+Route::post('login', function (Request $request) {
+    $credentials = $request->only('email', 'password');
+
+    if (Auth::attempt($credentials)) {
+        $user = Auth::user();
+        $token = $user->createToken('authToken')->plainTextToken;
+
+        return response()->json([
+            'statusCode' => 200,
+            'token' => $token,
+            'message' => 'Login successful'
+        ]);
+    }
+
+    return response()->json([
+        'statusCode' => 401,
+        'message' => 'Invalid credentials'
+    ], 401);
+})->name('login');

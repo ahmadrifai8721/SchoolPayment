@@ -14,7 +14,7 @@
                             <div class="page-title-right">
                                 <ol class="breadcrumb m-0">
                                     <li class="breadcrumb-item"><a href="javascript: void(0);">E SCH Pay</a></li>
-                                    <li class="breadcrumb-item"><a href="javascript: void(0);">Tagihan</a></li>
+                                    <li class="breadcrumb-item"><a href="javascript: void(0);">Transaksi</a></li>
                                     <li class="breadcrumb-item active">{{ $title }}</li>
                                 </ol>
                             </div>
@@ -27,20 +27,20 @@
 
                 <!-- Modal Body -->
                 <!-- if you want to close by clicking outside the modal, delete the last endpoint:data-bs-backdrop and data-bs-keyboard -->
-                <div class="modal fade" id="buatTagihanSiswa" data-bs-backdrop="static" data-bs-keyboard="false"
-                    role="dialog" aria-labelledby="buatTagihanSiswalTitleId" aria-hidden="true">
+                <div class="modal fade" id="buatTransaksi" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog"
+                    aria-labelledby="buatTransaksilTitleId" aria-hidden="true">
                     <div class="modal-dialog modal-fullscreen modal-dialog-centered" role="document">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title" id="buatTagihanSiswalTitleId">
-                                    Buat Tagihan Siswa
+                                <h5 class="modal-title" id="buatTransaksilTitleId">
+                                    Buat Transaksi Siswa
                                 </h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                                     aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
 
-                                <form class="row g-3 needs-validation" action="{{ Route('tagihanSiswa.store') }}"
+                                <form class="row g-3 needs-validation" action="{{ Route('Transaksi.store') }}"
                                     method="POST">
 
                                     @csrf
@@ -62,10 +62,10 @@
                                         </select>
                                     </div>
                                     <div class="col-md-12">
-                                        <label class="form-label">Tagihan</label>
+                                        <label class="form-label">Transaksi</label>
                                         <select class="select2 form-control select2-multiple" data-toggle="select2"
-                                            multiple="multiple" data-placeholder="Choose ..." name="daftar_tagihan_id[]">
-                                            @foreach ($daftarTagihan as $item)
+                                            multiple="multiple" data-placeholder="Choose ..." name="daftar_Transaksi_id[]">
+                                            @foreach ($DaftarTagihan as $item)
                                                 <option value="{{ $item->id }}"
                                                     @if ($item->trashed()) disabled @endif>
                                                     {{ $item->nama . '( Rp. ' . $item->nominal . ' )' }}
@@ -92,9 +92,9 @@
                             <div class="card-body">
                                 <div class="row mb-2">
                                     <div class="col-sm-5">
-                                        <a data-bs-toggle="modal" href="#buatTagihanSiswa" class="btn btn-primary mb-2"><i
+                                        <a data-bs-toggle="modal" href="#buatTransaksi" class="btn btn-primary mb-2"><i
                                                 class="mdi mdi-plus-circle me-2"></i> Tambah
-                                            Tagihan Siswa</a>
+                                            Transaksi Siswa</a>
                                     </div>
                                     <div class="col-sm-7">
                                     </div>
@@ -102,19 +102,19 @@
                                     <div class="table-responsive">
                                         <table
                                             class="table table-centered table-borderless table-hover w-100 dt-responsive nowrap"
-                                            id="dataTagihan">
+                                            id="dataTransaksi">
                                             <thead class="table-light">
                                                 <tr>
                                                     <th>Nama Siswa</th>
                                                     <th>Kelas</th>
-                                                    <th>Nama Tagihan</th>
+                                                    <th>Nama Transaksi</th>
                                                     <th>Nominal</th>
                                                     <th>satus</th>
                                                     <th style="width: 75px;">Action</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @foreach ($Tagihan as $item)
+                                                @foreach ($Transaksi as $item)
                                                     <tr>
                                                         <td>
                                                             {{ $item->User->name }}
@@ -126,7 +126,7 @@
                                                             {{ $item->nama }}
                                                         </td>
                                                         <td>
-                                                            {{ Number::currency($item->daftarTagihan->nominal, 'IDR') }}
+                                                            {{ Number::currency($item->daftarTransaksi->nominal, 'IDR') }}
                                                         </td>
                                                         <td>
                                                             {!! $item->trashed()
@@ -134,15 +134,14 @@
                                                                 : "<span class='badge bg-success text-bold'>Aktif</span>" !!}
                                                         </td>
                                                         <td class="d-flex">
-                                                            {{-- <a href="{{ route('tagihanSiswa.show', $item->id) }}"
+                                                            {{-- <a href="{{ route('Transaksi.show', $item->id) }}"
                                                                 class="action-icon"> <i class="uil-invoice"></i></a> --}}
                                                             @if ($item->trashed())
-                                                                <a href="{{ route('tagihanSiswa.restore', $item->id) }}"
+                                                                <a href="{{ route('Transaksi.restore', $item->id) }}"
                                                                     class="action-icon">
                                                                     <i class="mdi mdi-delete-restore"></i></a>
                                                             @else
-                                                                <form
-                                                                    action="{{ route('tagihanSiswa.destroy', $item->id) }}"
+                                                                <form action="{{ route('Transaksi.destroy', $item->id) }}"
                                                                     method="post">
                                                                     @method('DELETE')
                                                                     @csrf
@@ -210,9 +209,9 @@
             $(document).ready(function() {
 
                 $(".select3").select2({
-                    dropdownParent: $("#buatTagihanSiswa")
+                    dropdownParent: $("#buatTransaksi")
                 });
-                var table = $("#dataTagihan").DataTable({
+                var table = $("#dataTransaksi").DataTable({
                     language: {
                         paginate: {
                             previous: "<i class='mdi mdi-chevron-left'>",

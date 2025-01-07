@@ -4,31 +4,31 @@
     <!-- Brand Logo dark -->
     <a href="/" class="logo logo-dark">
         <span class="logo-lg">
-            <img src="{{ url("/") }}/assets/images/logo.svg" alt="logo">
+            <img src="{{ url('/') }}/assets/images/logo.svg" alt="logo">
         </span>
         <span class="logo-sm">
-            <img src="{{ url("/") }}/assets/images/logo.svg" alt="small logo">
+            <img src="{{ url('/') }}/assets/images/logo.svg" alt="small logo">
         </span>
     </a>
 
     <!-- Brand Logo light -->
     <a href="/" class="logo logo-light">
         <span class="logo-lg">
-            <img src="{{ url("/") }}/assets/images/logo-dark.svg" alt="light logo">
+            <img src="{{ url('/') }}/assets/images/logo-dark.svg" alt="light logo">
         </span>
         <span class="logo-sm">
-            <img src="{{ url("/") }}/assets/images/logo-dark.svg" alt="small logo">
+            <img src="{{ url('/') }}/assets/images/logo-dark.svg" alt="small logo">
         </span>
     </a>
 
     <!-- Sidebar Hover Menu Toggle Button -->
     <div class="button-sm-hover" data-bs-toggle="tooltip" data-bs-placement="right" title="Show Full Sidebar">
-        <i class="ri-checkbox-blank-circle-line align-middle"></i>
+        <i class="align-middle ri-checkbox-blank-circle-line"></i>
     </div>
 
     <!-- Full Sidebar Menu Close Button -->
     <div class="button-close-fullsidebar">
-        <i class="ri-close-fill align-middle"></i>
+        <i class="align-middle ri-close-fill"></i>
     </div>
 
     <!-- Sidebar -left -->
@@ -36,9 +36,9 @@
         <!-- Leftbar User -->
         <div class="leftbar-user">
             <a href="pages-profile.html">
-                <img src="{{ url("/") }}/assets/images/users/avatar-1.jpg" alt="user-image" height="42"
-                    class="rounded-circle shadow-sm">
-                <span class="leftbar-user-name mt-2">Dominic Keller</span>
+                <img src="{{ url('/') }}/assets/images/users/avatar-1.jpg" alt="user-image" height="42"
+                    class="shadow-sm rounded-circle">
+                <span class="mt-2 leftbar-user-name">Dominic Keller</span>
             </a>
         </div>
 
@@ -68,12 +68,8 @@
                             <a href="{{ Route('daftarTagihan.index') }}">Daftar Tagihan</a>
                         </li>
                         <li>
-                            <a href="{{ Route('kelompok.index') }}">Daftar Kelompok Tagihan</a>
+                            <a href="{{ Route('tagihanSiswa.index') }}">Tagihan Siswa</a>
                         </li>
-                        <li>
-                            <a href="{{ route('tagihanSiswa.index') }}">Tagihan Siswa</a>
-                        </li>
-
                     </ul>
                 </div>
             </li>
@@ -87,16 +83,16 @@
                 <div class="collapse" id="sidebarTransaksi">
                     <ul class="side-nav-second-level">
                         <li>
-                            <a href="#transaksi">Buat Transaksi</a>
+                            <a href="{{ route('Transaksi.create') }}">Buat Transaksi</a>
                         </li>
                         <li>
-                            <a href="#transaksi">Daftar Transaksi</a>
+                            <a href="{{ route('Transaksi.index') }}">Daftar Transaksi</a>
                         </li>
 
                     </ul>
                 </div>
             </li>
-            <li class="side-nav-item">
+            {{-- <li class="side-nav-item">
                 <a data-bs-toggle="collapse" href="#sidebarPotongan" aria-expanded="false"
                     aria-controls="sidebarPotongan" class="side-nav-link">
                     <i class="ri-percent-line"></i>
@@ -114,7 +110,7 @@
 
                     </ul>
                 </div>
-            </li>
+            </li> --}}
 
             <li class="side-nav-item">
                 <a href="apps-Metode Pembayaran.html" class="side-nav-link">
@@ -131,43 +127,51 @@
             </li>
 
             <!-- Help Box -->
-            <div class="help-box text-white text-center">
-                <a href="javascript: void(0);" class="float-end close-btn text-white">
+            <div class="text-center text-white help-box">
+                <a href="javascript: void(0);" class="text-white float-end close-btn">
                     <i class="mdi mdi-close"></i>
                 </a>
-                <img src="{{ url("/") }}/assets/images/svg/help-icon.svg" height="90" alt="Helper Icon Image" />
+                <img src="{{ url('/') }}/assets/images/svg/help-icon.svg" height="90"
+                    alt="Helper Icon Image" />
                 <h5 class="mt-3">E School Palyment</h5>
                 <p class="mb-3">Sistem Pembayaran Elektronik Untuk Sekolah dengan berbagai macam cara pembayran</p>
-                <div class="row bg-light rounded d-flex align-items-center justify-items-center">
+                <div class="rounded row bg-light d-flex align-items-center justify-items-center">
                     <p class="text-dark text-bold">Metode Pembayaran yang di dukung</p>
-                    <div class="col-sm-4 m-1">
-                        <img src="{{ url('/') }}/assets/images/payments/bni_va.png" width="50px" alt="" srcset="">
-                    </div>
-                    <div class="col-sm-4 m-1">
-                        <img src="{{ url('/') }}/assets/images/payments/briva-bri.jpg" width="50px" alt="" srcset="">
-                    </div>
-                    <div class="col-sm-4 m-1">
-                        <img src="{{ url('/') }}/assets/images/payments/bca_va.png" width="50px" alt="" srcset="">
-                    </div>
-                    <div class="col-sm-4 m-1">
-                        <img src="{{ url('/') }}/assets/images/payments/mandiri_va.png" width="50px" alt="" srcset="">
-                    </div>
-                    <div class="col-sm-4 m-1">
-                        <img src="{{ url('/') }}/assets/images/payments/alfamart_logo_baru.png" width="50px" alt=""
+                    <div class="m-1 col-sm-4">
+                        <img src="{{ url('/') }}/assets/images/payments/bni_va.png" width="50px" alt=""
                             srcset="">
                     </div>
-                    <div class="col-sm-4 m-1">
-                        <img src="{{ url('/') }}/assets/images/payments/logo_indomaret.png" width="50px" alt=""
+                    <div class="m-1 col-sm-4">
+                        <img src="{{ url('/') }}/assets/images/payments/briva-bri.jpg" width="50px"
+                            alt="" srcset="">
+                    </div>
+                    <div class="m-1 col-sm-4">
+                        <img src="{{ url('/') }}/assets/images/payments/bca_va.png" width="50px" alt=""
                             srcset="">
                     </div>
-                    <div class="col-sm-4 m-1">
-                        <img src="{{ url('/') }}/assets/images/payments/gopay_logo.svg" width="50px" alt="" srcset="">
+                    <div class="m-1 col-sm-4">
+                        <img src="{{ url('/') }}/assets/images/payments/mandiri_va.png" width="50px"
+                            alt="" srcset="">
                     </div>
-                    <div class="col-sm-4 m-1">
-                        <img src="{{ url('/') }}/assets/images/payments/shopee_pay.svg" width="50px" alt="" srcset="">
+                    <div class="m-1 col-sm-4">
+                        <img src="{{ url('/') }}/assets/images/payments/alfamart_logo_baru.png" width="50px"
+                            alt="" srcset="">
                     </div>
-                    <div class="col-sm-4 m-1">
-                        <img src="{{ url('/') }}/assets/images/payments/logo_qris.svg" width="50px" alt="" srcset="">
+                    <div class="m-1 col-sm-4">
+                        <img src="{{ url('/') }}/assets/images/payments/logo_indomaret.png" width="50px"
+                            alt="" srcset="">
+                    </div>
+                    <div class="m-1 col-sm-4">
+                        <img src="{{ url('/') }}/assets/images/payments/gopay_logo.svg" width="50px"
+                            alt="" srcset="">
+                    </div>
+                    <div class="m-1 col-sm-4">
+                        <img src="{{ url('/') }}/assets/images/payments/shopee_pay.svg" width="50px"
+                            alt="" srcset="">
+                    </div>
+                    <div class="m-1 col-sm-4">
+                        <img src="{{ url('/') }}/assets/images/payments/logo_qris.svg" width="50px"
+                            alt="" srcset="">
                     </div>
                 </div>
             </div>
