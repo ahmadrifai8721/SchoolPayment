@@ -56,9 +56,8 @@ Artisan::command("dapodik:import", function () {
     ])->get($urlRombel)->body();
 
     $getBodyRombel = json_decode($getBodyRombel);
-    $getBodyRombel = $getBodyRombel->rows;
-
     $progressBarGetRombel = $this->output->createProgressBar($getBodyRombel->result);
+    $getBodyRombel = $getBodyRombel->rows;
     $progressBarGetRombel->start();
 
     foreach ($getBodyRombel as $key => $value) {
@@ -90,8 +89,8 @@ Artisan::command("dapodik:import", function () {
 
 
     $getBody = json_decode($getBody);
-    $getBody = $getBody->rows;
     $progressBar = $this->output->createProgressBar($getBody->result);
+    $getBody = $getBody->rows;
     $progressBar->start();
 
     foreach ($getBody as $key => $value) {
@@ -119,4 +118,4 @@ Artisan::command("dapodik:import", function () {
     $progressBar->finish();
 
     $this->comment("Selesai Import Data Dari dapodik");
-});
+})->purpose("Import Data From Dapodik");
