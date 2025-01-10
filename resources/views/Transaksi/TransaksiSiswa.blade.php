@@ -27,13 +27,13 @@
 
                 <!-- Modal Body -->
                 <!-- if you want to close by clicking outside the modal, delete the last endpoint:data-bs-backdrop and data-bs-keyboard -->
-                <div class="modal fade" id="buatTransaksi" data-bs-backdrop="static" data-bs-keyboard="false" role="dialog"
-                    aria-labelledby="buatTransaksilTitleId" aria-hidden="true">
-                    <div class="modal-dialog modal-fullscreen modal-dialog-centered" role="document">
+                <div class="modal fade" id="buatTransaksi" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false"
+                    role="dialog" aria-labelledby="buatTransaksilTitleId" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
                         <div class="modal-content">
                             <div class="modal-header">
                                 <h5 class="modal-title" id="buatTransaksilTitleId">
-                                    Buat Transaksi Siswa
+                                    Buat Tagihan Baru
                                 </h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal"
                                     aria-label="Close"></button>
@@ -48,8 +48,9 @@
                                     <div class="col-md-12">
                                         <label for="namaSiswa" class="form-label">Nama Siswa</label>
                                         <!-- Multiple Select -->
-                                        <select class="select2 form-control select2-multiple" data-toggle="select2"
-                                            multiple="multiple" data-placeholder="Choose ..." name="user_id[]">
+                                        <select class="select2 form-control" data-toggle="select2"
+                                            data-placeholder="Choose ..." name="user_id" id="namaSiswa">
+                                            <option disabled selected> Pilih Nama Siswa</option>
                                             @foreach ($AnggotaKelas as $key => $item)
                                                 <optgroup
                                                     label="{{ $Kelas->where('rombongan_belajar_id', $key)->first()->kelas }}">
@@ -62,16 +63,26 @@
                                         </select>
                                     </div>
                                     <div class="col-md-12">
-                                        <label class="form-label">Transaksi</label>
+                                        <label class="form-label">Tagihan</label>
                                         <select class="select2 form-control select2-multiple" data-toggle="select2"
-                                            multiple="multiple" data-placeholder="Choose ..." name="daftar_Transaksi_id[]">
-                                            @foreach ($DaftarTagihan as $item)
-                                                <option value="{{ $item->id }}"
-                                                    @if ($item->trashed()) disabled @endif>
-                                                    {{ $item->nama . '( Rp. ' . $item->nominal . ' )' }}
-                                                </option>
+                                            multiple="multiple" data-placeholder="Choose ..." name="daftar_tagihan_id[]"
+                                            id="tagihan">
+
+                                        </select>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label">Metode Pembayran</label>
+                                        <select class="select2 form-control" data-toggle="select2"
+                                            data-placeholder="Choose ..." name="methode_pembayaran_id" id="MetodePembayran">
+                                            @foreach ($MethodePembayaran as $item)
+                                                <option value="{{ $item->id }}">{{ $item->nama }}</option>
                                             @endforeach
                                         </select>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label for="total" class="form-label">Nominal</label>
+                                        <input type="text" class="form-control" name="total" id="total" required>
+
                                     </div>
                                     <div class="col-12">
                                         <button class="btn btn-primary" type="submit">Tambahkan</button>
@@ -106,11 +117,10 @@
                                             <thead class="table-light">
                                                 <tr>
                                                     <th>Nama Siswa</th>
-                                                    <th>Kelas</th>
-                                                    <th>Nama Transaksi</th>
+                                                    <th>Nama Tagihan</th>
+                                                    <th>Methode Pembayaran</th>
                                                     <th>Nominal</th>
                                                     <th>satus</th>
-                                                    <th style="width: 75px;">Action</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -120,36 +130,36 @@
                                                             {{ $item->User->name }}
                                                         </td>
                                                         <td>
-                                                            {{ $item->User->AnggotaKelas->Kelas->kelas }}
+                                                            {{ $item->Tagihan->DaftarTagihan->nama }}
                                                         </td>
                                                         <td>
-                                                            {{ $item->nama }}
+                                                            {{ $item->MethodePembayaran->nama }}
                                                         </td>
                                                         <td>
-                                                            {{ Number::currency($item->daftarTransaksi->nominal, 'IDR') }}
+                                                            {{ Number::currency($item->total, 'IDR') }}
                                                         </td>
                                                         <td>
-                                                            {!! $item->trashed()
-                                                                ? "<span class='badge bg-danger text-bold'> Tidak Aktif</span>"
-                                                                : "<span class='badge bg-success text-bold'>Aktif</span>" !!}
+                                                            @switch($item->status)
+                                                                @case(1)
+                                                                    <span class='badge bg-success text-bold'> Berhasil</span>
+                                                                @break
+
+                                                                @case(2)
+                                                                    <span class='badge bg-warning text-bold'> Menunggu
+                                                                        Pembayaran</span>
+                                                                @break
+
+                                                                @case(3)
+                                                                    <span class='badge bg-warning text-bold'> Nomer VA Sudah Di
+                                                                        Buat</span>
+                                                                @break
+
+                                                                @default
+                                                                    <span class='badge bg-danger text-bold'> Di Batalkan /
+                                                                        expaier</span>
+                                                            @endswitch
                                                         </td>
-                                                        <td class="d-flex">
-                                                            {{-- <a href="{{ route('Transaksi.show', $item->id) }}"
-                                                                class="action-icon"> <i class="uil-invoice"></i></a> --}}
-                                                            @if ($item->trashed())
-                                                                <a href="{{ route('Transaksi.restore', $item->id) }}"
-                                                                    class="action-icon">
-                                                                    <i class="mdi mdi-delete-restore"></i></a>
-                                                            @else
-                                                                <form action="{{ route('Transaksi.destroy', $item->id) }}"
-                                                                    method="post">
-                                                                    @method('DELETE')
-                                                                    @csrf
-                                                                    <button type="submit" class="action-icon btn d-block">
-                                                                        <i class="uil-trash"></i></button>
-                                                                </form>
-                                                            @endif
-                                                        </td>
+
                                                     </tr>
                                                 @endforeach
                                             </tbody>
@@ -234,9 +244,6 @@
                         {
                             orderable: !0,
                         },
-                        {
-                            orderable: !0,
-                        }
                     ],
                     order: [
                         [1, "desc"]

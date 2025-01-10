@@ -14,9 +14,10 @@ return new class extends Migration
         Schema::create('methode_pembayarans', function (Blueprint $table) {
             $table->id();
             $table->string("nama");
-            $table->string("type")->default("manual");
-            $table->boolean("status");
+            $table->string("type")->default("offline");
+            $table->boolean("percent")->default(false);
             $table->integer("biayaTransaksi")->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

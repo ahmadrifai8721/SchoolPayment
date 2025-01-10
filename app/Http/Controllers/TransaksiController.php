@@ -5,11 +5,25 @@ namespace App\Http\Controllers;
 use App\Models\AnggotaKelas;
 use App\Models\DaftarTagihan;
 use App\Models\Kelas;
+use App\Models\MethodePembayaran;
+use App\Models\Tagihan;
 use App\Models\Transaksi;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Midtrans\Config;
+use Midtrans\Snap;
 
 class TransaksiController extends Controller
 {
+
+    public function __construct()
+    {
+        Config::$serverKey = config('midtrans.server_key');
+        Config::$isProduction = config('midtrans.is_production');
+        Config::$isSanitized = config('midtrans.is_sanitized');
+        Config::$is3ds = config('midtrans.is_3ds');
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -24,6 +38,7 @@ class TransaksiController extends Controller
             "AnggotaKelas" => AnggotaKelas::all()->groupBy("rombongan_belajar_id"),
             "DaftarTagihan" => DaftarTagihan::withTrashed()->get(),
             "Kelas" => new Kelas,
+            "MethodePembayaran" => MethodePembayaran::all(),
         ]);
     }
 
@@ -33,6 +48,17 @@ class TransaksiController extends Controller
     public function create()
     {
         //
+
+        // return Kelas::all();
+
+        return view("Transaksi.Transaksi", [
+            "title" => "Bayar Tagihan",
+            "Transaksi" => Transaksi::withTrashed()->get(),
+            "AnggotaKelas" => AnggotaKelas::all()->groupBy("rombongan_belajar_id"),
+            "DaftarTagihan" => DaftarTagihan::withTrashed()->get(),
+            "Kelas" => new Kelas,
+            "MethodePembayaran" => MethodePembayaran::all(),
+        ]);
     }
 
     /**
@@ -41,39 +67,111 @@ class TransaksiController extends Controller
     public function store(Request $request)
     {
         //
-        $data = $request->input();
-        if ($request->input("kelas")) {
-            $dataSiswa = json_decode(base64_decode($data['rombongan_belajar_id']));
-            foreach ($dataSiswa as $key => $value) {
-                # code...
-                foreach ($data['daftar_Transaksi_id'] as $daftar_Transaksi_id) {
-                    # code...
-                    Transaksi::create([
-                        'nama' => DaftarTagihan::find($daftar_Transaksi_id)->nama,
-                        'user_id' => $value->user_id,
-                        'daftar_Transaksi_id' => $daftar_Transaksi_id
-                    ]);
-                }
-            }
+        $methode = MethodePembayaran::find($request->input('methode_pembayaran_id'));
+
+        if ($methode->type == "offline") {
             # code...
-        } else {
-
-            foreach ($data["user_id"] as $siswa) {
-                foreach ($data['daftar_Transaksi_id'] as $daftar_Transaksi_id) {
+            // dd($methode);
+            foreach ($request->input('daftar_tagihan_id') as $key => $value) {
+                $fee = $methode->percent == 1 ? ($request->input("total") * $methode->biayaTransaksi / 100) : $request->input("total") + $methode->biayaTransaksi;
+                $total = $request->input("total") + $fee;
+                # code...
+                $tagihan = Tagihan::find($value);
+                $data = [
+                    "user_id" => $request->input('user_id'),
+                    "tanggal" => now(),
+                    "methode_pembayaran_id" => $methode->id,
+                    "tagihan_id" => $value,
+                    "fee" => $fee,
+                    "total" => $total,
+                    "status" => 1,
+                ];
+                Transaksi::create($data);
+                // dd($tagihan->DaftarTagihan->nominal);
+                if ($tagihan->DaftarTagihan->nominal <= $request->input("total")) {
                     # code...
-                    Transaksi::create([
-                        'nama' => DaftarTagihan::find($daftar_Transaksi_id)->nama,
-                        'user_id' => $siswa,
-                        'daftar_Transaksi_id' => $daftar_Transaksi_id
+                    $tagihan->update([
+                        "status" => 1
                     ]);
                 }
             }
+            return back()->with("success", "Transaksi Baru Berhasil Di Simpan");
+        } else {
+            //             "credit_card",
+            // "gopay",
+            // "shopeepay",
+            // "permata_va",
+            // "bca_va",
+            // "bni_va",
+            // "bri_va",
+            // "echannel",
+            // "other_va",
+            // "Indomaret",
+            // "alfamart",
+            // "akulaku"
+            $i = 1;
+            foreach ($request->input('daftar_tagihan_id') as $key => $value) {
+                # code...
+                $tagihan = Tagihan::find($value);
+
+                $getUser = User::find($request->input('user_id'));
+                $fee = $methode->percent == 1 ? ($request->input("total") * $methode->biayaTransaksi / 100) : $methode->biayaTransaksi;
+                $total = $request->input("total") + $fee;
+                $order_id = $getUser->nisn . '-' . $getUser->Transaksi->count();
+                $params = [
+                    'transaction_details' => [
+                        'order_id' => $order_id,
+                        'gross_amount' => $total,
+                    ],
+                    "item_details" => [
+                        [
+                            "id" => $i++,
+                            "price" => $request->input("total"),
+                            "quantity" => 1,
+                            "name" => DaftarTagihan::find($value)->first()->nama
+                        ],
+                        [
+                            "id" => $i++,
+                            "price" => $fee,
+                            "quantity" => 1,
+                            "name" => "Fee"
+                        ],
+                    ],
+                    'customer_details' => [
+                        'first_name' => $getUser->name,
+                        'last_name' => $getUser->nisn,
+                        'email' => $getUser->email,
+                        'phone' => $getUser->nomerHP,
+                    ],
+                    "enabled_payments" => [MethodePembayaran::find($request->input('methode_pembayaran_id'))->nama],
+
+                ];
+                // dd($params);
+
+                $snapToken = Snap::createTransaction($params);
+
+                $data = [
+                    "user_id" => $request->input('user_id'),
+                    "tanggal" => now(),
+                    "methode_pembayaran_id" => $methode->id,
+                    "tagihan_id" => $value,
+                    "fee" => $fee,
+                    "total" => $request->input("total"),
+                    "status" => 3,
+                    "order_id" => $order_id,
+                    "snapToken" => $snapToken->token,
+                ];
+
+                Transaksi::create($data);
+                // dd();
+                return redirect()->away($snapToken->redirect_url);
+
+                // header("Location:" . );
+                // dd($tagihan->DaftarTagihan->nominal);
+            }
+
+            return back()->with("success", "Transaksi Baru Berhasil Di Simpan");
         }
-
-        // Transaksi::create($data);
-
-
-        return back()->with("success", "Transaksi Baru Berhasil Di Simpan");
     }
 
     /**

@@ -113,7 +113,7 @@
             </li> --}}
 
             <li class="side-nav-item">
-                <a href="apps-Metode Pembayaran.html" class="side-nav-link">
+                <a href="{{ route('MethodePembayaran.index') }}" class="side-nav-link">
                     <i class="uil-sitemap"></i>
                     <span> Metode Pembayaran </span>
                 </a>

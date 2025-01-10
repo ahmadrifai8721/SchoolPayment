@@ -17,8 +17,11 @@ return new class extends Migration
             $table->string("tanggal");
             $table->foreignId("methode_pembayaran_id")->constrained("methode_pembayarans")->cascadeOnDelete();
             $table->foreignId("tagihan_id")->constrained("tagihans")->cascadeOnDelete();
-            $table->integer("biayaTransaksi");
+            $table->integer("fee");
             $table->integer("total");
+            $table->string("snapToken")->nullable();
+            $table->string("order_id")->nullable();
+            $table->string("transaction_id")->nullable();
             $table->string("status");
             $table->softDeletes();
             $table->timestamps();

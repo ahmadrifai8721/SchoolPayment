@@ -2,6 +2,7 @@
 
 use App\Models\AnggotaKelas;
 use App\Models\Kelas;
+use App\Models\Transaksi;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
@@ -20,9 +21,9 @@ use Illuminate\Support\Facades\Auth;
 |
 */
 
-// Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-//     return $request->user()->AnggotaKelas;
-// });
+Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
+    return $request->user();
+});
 route::post("User/{code}", function ($code) {
     if ($code == "koalaToken") {
 
@@ -142,6 +143,23 @@ Route::get(
     }
 )->name("apiUser");
 
+Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
+
+    Route::get("tagihan", function (Request $request) {
+        $tagihan = $request->user()->tagihan;
+        foreach ($tagihan as $key => $value) {
+            # code...
+            $data[$key] = [
+                "namaTagihan" => $value->nama,
+                "nominal" => $value->DaftarTagihan->nominal,
+                "terbayar" => $value->Transaksi->sum("total"),
+                "sisa" => $value->DaftarTagihan->nominal - $value->Transaksi->sum("total"),
+            ];
+        }
+
+        return response()->json($data);
+    });
+});
 
 Route::post('login', function (Request $request) {
     $credentials = $request->only('email', 'password');
@@ -162,3 +180,119 @@ Route::post('login', function (Request $request) {
         'message' => 'Invalid credentials'
     ], 401);
 })->name('login');
+
+// Hendel Mindrans
+
+Route::prefix("Midtrans")->group(function () {
+
+    Route::post("notif", function (Request $request) {
+        $data = $request->all();
+        return response()->json([
+            'statusCode' => 200,
+            'message' => 'Notification received',
+            "data" => $data
+        ]);
+    })->name("MidtransNotif");
+    Route::get("finish", function (Request $request) {
+        $data = $request->all();
+        $transaksi = Transaksi::where("order_id", $data["order_id"]);
+        switch ($data["transaction_status"]) {
+            case "settlement":
+                $transaksi->update([
+                    "status" => 1
+                ]);
+                $total = $transaksi->sum("total");
+                $tagihan = $transaksi->first()->Tagihan->first()->nominal;
+                if ((-$total) == 0) {
+                    # code...
+                    $transaksi->first()->Tagihan->update([
+                        "status" => 1
+                    ]);
+                    return redirect()->route('Transaksi.index');
+                }
+                return redirect()->route('Transaksi.index');
+                break;
+            case "pending":
+                $transaksi->update([
+                    "status" => 3
+                ]);
+                return redirect()->route('Transaksi.index');
+                break;
+            case "deny":
+                $transaksi->update([
+                    "status" => 4
+                ]);
+                return redirect()->route('Transaksi.index');
+                break;
+            case "expire":
+                $transaksi->update([
+                    "status" => 4
+                ]);
+                return redirect()->route('Transaksi.index');
+                break;
+            case "cancel":
+                $transaksi->update([
+                    "status" => 4
+                ]);
+                return redirect()->route('Transaksi.index');
+                break;
+        }
+    })->name("MidtransFinish");
+    Route::post("unfinish", function (Request $request) {
+        $data = $request->all();
+        $transaksi = Transaksi::where("order_id", $data["order_id"]);
+        switch ($data["transaction_status"]) {
+            case "settlement":
+                $transaksi->update([
+                    "status" => 1
+                ]);
+                $transaksi->first()->Tagihan->update([
+                    "status" => 1
+                ]);
+                break;
+            case "pending":
+                $transaksi->update([
+                    "status" => 3
+                ]);
+                break;
+            case "deny":
+                $transaksi->update([
+                    "status" => 4
+                ]);
+                break;
+            case "expire":
+                $transaksi->update([
+                    "status" => 4
+                ]);
+                break;
+            case "cancel":
+                $transaksi->update([
+                    "status" => 4
+                ]);
+                break;
+        }
+    })->name("MidtransUnfinish");
+    Route::post("error", function (Request $request) {
+        $data = $request->all();
+        return response()->json([
+            'statusCode' => 200,
+            'message' => 'Transaction error',
+            "data" => $data
+        ]);
+    })->name("MidtransError");
+});
+
+
+Route::get("tagihanSiswa/{user}", function (User $user) {
+    $tagihan = $user->Tagihan->where("status", 0);
+    $data = [];
+    foreach ($tagihan as $key => $value) {
+        $data[] = [
+            "id" => $value->id,
+            "nama" => $value->nama,
+            // "nominal" => $value->DaftarTagihan->nominal -
+            "nominal" => $value->Transaksi == [] ? $value->DaftarTagihan->nominal : $value->DaftarTagihan->nominal - $value->Transaksi->sum("total"),
+        ];
+    }
+    return response()->json($data);
+})->name("apiTagihanSiswa");

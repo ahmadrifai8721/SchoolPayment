@@ -22,4 +22,12 @@ class Transaksi extends Model
     {
         return $this->belongsTo(User::class);
     }
+    public function MethodePembayaran(): BelongsTo
+    {
+        return $this->belongsTo(MethodePembayaran::class);
+    }
+    public function Tagihan(): BelongsTo
+    {
+        return $this->belongsTo(Tagihan::class);
+    }
 }

@@ -30,4 +30,8 @@ class Tagihan extends Model
     {
         return $this->belongsTo(DaftarTagihan::class);
     }
+    public function Transaksi(): HasMany
+    {
+        return $this->hasMany(Transaksi::class);
+    }
 }
