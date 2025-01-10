@@ -56,7 +56,8 @@ Artisan::command("dapodik:import", function () {
     ])->get($urlRombel)->body();
 
     $getBodyRombel = json_decode($getBodyRombel);
-    $progressBarGetRombel = $this->output->createProgressBar($getBodyRombel->result);
+    $progressBarGetRombel = $this->output->createProgressBar($getBodyRombel->results);
+    $progressBarGetRombel->setMaxSteps($getBodyRombel->results);;
     $getBodyRombel = $getBodyRombel->rows;
     $progressBarGetRombel->start();
 
@@ -70,7 +71,7 @@ Artisan::command("dapodik:import", function () {
         }
     }
 
-    $progressBarGetRombel->finis();
+    $progressBarGetRombel->finish();
 
     $this->comment("Import Daftar Siswa");
 
@@ -89,7 +90,7 @@ Artisan::command("dapodik:import", function () {
 
 
     $getBody = json_decode($getBody);
-    $progressBar = $this->output->createProgressBar($getBody->result);
+    $progressBar = $this->output->createProgressBar($getBody->results);
     $getBody = $getBody->rows;
     $progressBar->start();
 
@@ -117,5 +118,5 @@ Artisan::command("dapodik:import", function () {
     }
     $progressBar->finish();
 
-    $this->comment("Selesai Import Data Dari dapodik");
+    $this->comment("Selesai Import Data Dari dapodik ");
 })->purpose("Import Data From Dapodik");
