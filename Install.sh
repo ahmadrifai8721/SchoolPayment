@@ -8,6 +8,8 @@ sudo chmod -R 775 bootstrap/cache
 
 echo "Welcome to School Payment installation"
 
+composer install
+
 echo "Please enter key"
 
 read key
