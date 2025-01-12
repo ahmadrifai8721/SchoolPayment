@@ -170,10 +170,12 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
         foreach ($tagihan as $key => $value) {
             # code...
             $data[$key] = [
-                "namaTagihan" => $value->nama,
+                "id" => $value->id,
+                "nama" => $value->nama,
+                "usernamae" => $value->User->name,
                 "nominal" => $value->DaftarTagihan->nominal,
                 "terbayar" => $value->Transaksi->sum("total"),
-                "sisa" => $value->DaftarTagihan->nominal - $value->Transaksi->sum("total"),
+                "Status" => $value->status,
             ];
         }
 
