@@ -21,9 +21,7 @@ use Illuminate\Support\Facades\Auth;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
+
 route::post("User/{code}", function ($code) {
     if ($code == "koalaToken") {
 
@@ -145,6 +143,20 @@ Route::get(
 
 Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
 
+    Route::get("transaksi", function (Request $request) {
+        $tagihan = $request->user()->tagihan;
+        foreach ($tagihan as $key => $value) {
+            # code...
+            $data[$key] = [
+                "namaTagihan" => $value->nama,
+                "nominal" => $value->DaftarTagihan->nominal,
+                "terbayar" => $value->Transaksi->sum("total"),
+                "sisa" => $value->DaftarTagihan->nominal - $value->Transaksi->sum("total"),
+            ];
+        }
+
+        return response()->json($data);
+    });
     Route::get("tagihan", function (Request $request) {
         $tagihan = $request->user()->tagihan;
         foreach ($tagihan as $key => $value) {
@@ -159,27 +171,30 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
 
         return response()->json($data);
     });
-});
+    Route::get('user', function (Request $request) {
+        return $request->user();
+    });
+    Route::post('login', function (Request $request) {
+        $credentials = $request->only('email', 'password');
 
-Route::post('login', function (Request $request) {
-    $credentials = $request->only('email', 'password');
+        if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+            $token = $user->createToken('authToken')->plainTextToken;
 
-    if (Auth::attempt($credentials)) {
-        $user = Auth::user();
-        $token = $user->createToken('authToken')->plainTextToken;
+            return response()->json([
+                'statusCode' => 200,
+                'token' => $token,
+                'message' => 'Login successful'
+            ]);
+        }
 
         return response()->json([
-            'statusCode' => 200,
-            'token' => $token,
-            'message' => 'Login successful'
-        ]);
-    }
+            'statusCode' => 401,
+            'message' => 'Invalid credentials'
+        ], 401);
+    })->name('login');
+});
 
-    return response()->json([
-        'statusCode' => 401,
-        'message' => 'Invalid credentials'
-    ], 401);
-})->name('login');
 
 // Hendel Mindrans
 
@@ -296,5 +311,3 @@ Route::get("tagihanSiswa/{user}", function (User $user) {
     }
     return response()->json($data);
 })->name("apiTagihanSiswa");
-
-
