@@ -146,6 +146,7 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
     Route::get("transaksi", function (Request $request) {
         $transaksi = $request->user()->Transaksi;
         // dd($transaksi);
+        $data = [];
         foreach ($transaksi as $key => $value) {
             # code...
             $data[$key] = [
