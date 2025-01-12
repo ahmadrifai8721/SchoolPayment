@@ -196,7 +196,7 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
                     "nama" => $value->nama,
                     "username" => $value->User->name,
                     "nominal" => $value->DaftarTagihan->nominal,
-                    "terbayar" => $value->Transaksi->sum("total"),
+                    "terbayar" => $value->Transaksi->where("status", 1)->sum("total"),
                     "Status" => $value->status,
                 ];
             }
@@ -210,7 +210,7 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
                     "nama" => $value->nama,
                     "username" => $value->User->name,
                     "nominal" => $value->DaftarTagihan->nominal,
-                    "terbayar" => $value->Transaksi->sum("total"),
+                    "terbayar" => $value->Transaksi->where("status", 1)->sum("total"),
                     "Status" => $value->status,
                 ];
             }
