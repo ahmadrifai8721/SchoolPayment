@@ -159,7 +159,7 @@ class TransaksiController extends Controller
                     "total" => $request->input("total"),
                     "status" => 3,
                     "order_id" => $order_id,
-                    "snapToken" => $snapToken->token,
+                    "snapToken" => $snapToken->redirect_url,
                 ];
 
                 Transaksi::create($data);
