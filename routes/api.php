@@ -172,7 +172,7 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
             $data[$key] = [
                 "id" => $value->id,
                 "nama" => $value->nama,
-                "usernamae" => $value->User->name,
+                "username" => $value->User->name,
                 "nominal" => $value->DaftarTagihan->nominal,
                 "terbayar" => $value->Transaksi->sum("total"),
                 "Status" => $value->status,
