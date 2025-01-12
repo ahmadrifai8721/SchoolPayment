@@ -144,14 +144,21 @@ Route::get(
 Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
 
     Route::get("transaksi", function (Request $request) {
-        $tagihan = $request->user()->tagihan;
-        foreach ($tagihan as $key => $value) {
+        $transaksi = $request->user()->Transaksi;
+        dd($transaksi);
+        foreach ($transaksi as $key => $value) {
             # code...
             $data[$key] = [
-                "namaTagihan" => $value->nama,
-                "nominal" => $value->DaftarTagihan->nominal,
-                "terbayar" => $value->Transaksi->sum("total"),
-                "sisa" => $value->DaftarTagihan->nominal - $value->Transaksi->sum("total"),
+                'id' => $value->id,
+                'username' => $request->user()->name,
+                'tanggal' => $value->tanggal,
+                'methodePembayran' => $value->MethodePembayaran->nama,
+                'namaTagihan' => $value->DaftarTagihan->nama,
+                'fee' => $value->fee,
+                'total' => $value->total,
+                'snapToken' => $value->snapToken,
+                'order_id' => $value->order_id,
+                'status' => ($value->status == 1) ? "Successful" : (($value->status == 2) ? "Menunggu Pembayaran" : (($value->status == 3) ? "VA Ssudah Di Buat" : "Transasi di Batalkan")),
             ];
         }
 
