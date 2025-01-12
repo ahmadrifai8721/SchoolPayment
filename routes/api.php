@@ -182,26 +182,26 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
     Route::get('user', function (Request $request) {
         return $request->user();
     });
-    Route::post('login', function (Request $request) {
-        $credentials = $request->only('email', 'password');
+});
+Route::post('login', function (Request $request) {
+    $credentials = $request->only('email', 'password');
 
-        if (Auth::attempt($credentials)) {
-            $user = Auth::user();
-            $token = $user->createToken('authToken')->plainTextToken;
-
-            return response()->json([
-                'statusCode' => 200,
-                'token' => $token,
-                'message' => 'Login successful'
-            ]);
-        }
+    if (Auth::attempt($credentials)) {
+        $user = Auth::user();
+        $token = $user->createToken('authToken')->plainTextToken;
 
         return response()->json([
-            'statusCode' => 401,
-            'message' => 'Invalid credentials'
-        ], 401);
-    })->name('login');
-});
+            'statusCode' => 200,
+            'token' => $token,
+            'message' => 'Login successful'
+        ]);
+    }
+
+    return response()->json([
+        'statusCode' => 401,
+        'message' => 'Invalid credentials'
+    ], 401);
+})->name('login');
 
 
 // Hendel Mindrans
