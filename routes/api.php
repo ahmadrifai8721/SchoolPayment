@@ -253,10 +253,7 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
     });
     Route::get('payment-methods', function () {
         $methods = MethodePembayaran::all();
-        return response()->json([
-            'statusCode' => 200,
-            'methods' => $methods,
-        ]);
+        return response()->json($methods);
     });
 });
 Route::post('login', function (Request $request) {
