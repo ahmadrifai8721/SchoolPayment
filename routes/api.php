@@ -237,30 +237,31 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
         if ($methode->type == "offline") {
             # code...
             // dd($methode);
-            foreach ($request->input('daftar_tagihan_id') as $key => $value) {
-                $fee = $methode->percent == 1 ? ($request->input("total") * $methode->biayaTransaksi / 100) : $request->input("total") + $methode->biayaTransaksi;
-                $total = $request->input("total") + $fee;
+            $fee = $methode->percent == 1 ? ($request->input("total") * $methode->biayaTransaksi / 100) : $request->input("total") + $methode->biayaTransaksi;
+            $total = $request->input("total") + $fee;
+            # code...
+            $tagihan = Tagihan::find($request->tagihan_id);
+            $data = [
+                "user_id" => $request->input('user_id'),
+                "tanggal" => now(),
+                "methode_pembayaran_id" => $methode->id,
+                "tagihan_id" => $request->tagihan_id,
+                "fee" => $fee,
+                "total" => $total,
+                "status" => 1,
+            ];
+            Transaksi::create($data);
+            // dd($tagihan->DaftarTagihan->nominal);
+            if ($tagihan->DaftarTagihan->nominal <= $request->input("total")) {
                 # code...
-                $tagihan = Tagihan::find($value);
-                $data = [
-                    "user_id" => $request->input('user_id'),
-                    "tanggal" => now(),
-                    "methode_pembayaran_id" => $methode->id,
-                    "tagihan_id" => $value,
-                    "fee" => $fee,
-                    "total" => $total,
-                    "status" => 1,
-                ];
-                Transaksi::create($data);
-                // dd($tagihan->DaftarTagihan->nominal);
-                if ($tagihan->DaftarTagihan->nominal <= $request->input("total")) {
-                    # code...
-                    $tagihan->update([
-                        "status" => 1
-                    ]);
-                }
+                $tagihan->update([
+                    "status" => 1
+                ]);
             }
-            return back()->with("success", "Transaksi Baru Berhasil Di Simpan");
+
+            return response()->json([
+                "message" => "success"
+            ]);
         } else {
             //             "credit_card",
             // "gopay",
@@ -275,9 +276,8 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
             // "alfamart",
             // "akulaku"
             $i = 1;
-            foreach ($request->input('daftar_tagihan_id') as $key => $value) {
                 # code...
-                $tagihan = Tagihan::find($value);
+                $tagihan = Tagihan::find($request->tagihan_id);
 
                 $getUser = User::find($request->input('user_id'));
                 $fee = $methode->percent == 1 ? ($request->input("total") * $methode->biayaTransaksi / 100) : $methode->biayaTransaksi;
@@ -290,13 +290,13 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
                     ],
                     "item_details" => [
                         [
-                            "id" => $i++,
+                            "id" => 1,
                             "price" => $request->input("total"),
                             "quantity" => 1,
-                            "name" => DaftarTagihan::find($value)->first()->nama
+                            "name" => DaftarTagihan::find($request->tagihan_id)->first()->nama
                         ],
                         [
-                            "id" => $i++,
+                            "id" =>2,
                             "price" => $fee,
                             "quantity" => 1,
                             "name" => "Fee"
@@ -319,7 +319,7 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
                     "user_id" => $request->input('user_id'),
                     "tanggal" => now(),
                     "methode_pembayaran_id" => $methode->id,
-                    "tagihan_id" => $value,
+                    "tagihan_id" => $request->tagihan_id,
                     "fee" => $fee,
                     "total" => $request->input("total"),
                     "status" => 3,
