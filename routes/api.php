@@ -313,7 +313,7 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
             ];
             // dd($params);
 
-            $snapToken = Snap::createTransaction($params);
+            // $snapToken = Snap::createTransaction($params);
 
             $data = [
                 "user_id" => $getUser->id,
@@ -324,12 +324,12 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
                 "total" => $request->input("total"),
                 "status" => 3,
                 "order_id" => $order_id,
-                "snapToken" => $snapToken->redirect_url,
+                "snapToken" =>"097",
             ];
 
             Transaksi::create($data);
             // dd();
-            return redirect()->away($snapToken->redirect_url);
+            // return redirect()->away($snapToken->redirect_url);
 
             // header("Location:" . );
             // dd($tagihan->DaftarTagihan->nominal);
