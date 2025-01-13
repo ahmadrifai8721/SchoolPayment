@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\AnggotaKelas;
+use App\Models\DaftarTagihan;
 use App\Models\Kelas;
 use App\Models\Tagihan;
 use App\Models\Transaksi;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Number;
 use Illuminate\Support\Facades\Auth;
 use App\Models\MethodePembayaran;
+use Midtrans\Snap;
 
 /*
 |--------------------------------------------------------------------------
@@ -229,27 +231,112 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
         return User::where("isAdmin", "0")->get(["id", "name", "nisn"]);
     });
     Route::post('payment', function (Request $request) {
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'tagihan_id' => 'required|exists:tagihan,id',
-            'total' => 'required|numeric',
-            'methodePembayaran_id' => 'required|exists:methode_pembayaran,id',
-        ]);
 
-        $transaksi = Transaksi::create([
-            'user_id' => $validated['user_id'],
-            'tagihan_id' => $validated['tagihan_id'],
-            'total' => $validated['total'],
-            'methodePembayaran_id' => $validated['methodePembayaran_id'],
-            'status' => 2, // Assuming 2 means pending
-            'tanggal' => now(),
-        ]);
+        $methode = MethodePembayaran::find($request->input('methode_pembayaran_id'));
 
-        return response()->json([
-            'statusCode' => 200,
-            'message' => 'Payment initiated successfully',
-            'transaksi' => $transaksi,
-        ]);
+        if ($methode->type == "offline") {
+            # code...
+            // dd($methode);
+            foreach ($request->input('daftar_tagihan_id') as $key => $value) {
+                $fee = $methode->percent == 1 ? ($request->input("total") * $methode->biayaTransaksi / 100) : $request->input("total") + $methode->biayaTransaksi;
+                $total = $request->input("total") + $fee;
+                # code...
+                $tagihan = Tagihan::find($value);
+                $data = [
+                    "user_id" => $request->input('user_id'),
+                    "tanggal" => now(),
+                    "methode_pembayaran_id" => $methode->id,
+                    "tagihan_id" => $value,
+                    "fee" => $fee,
+                    "total" => $total,
+                    "status" => 1,
+                ];
+                Transaksi::create($data);
+                // dd($tagihan->DaftarTagihan->nominal);
+                if ($tagihan->DaftarTagihan->nominal <= $request->input("total")) {
+                    # code...
+                    $tagihan->update([
+                        "status" => 1
+                    ]);
+                }
+            }
+            return back()->with("success", "Transaksi Baru Berhasil Di Simpan");
+        } else {
+            //             "credit_card",
+            // "gopay",
+            // "shopeepay",
+            // "permata_va",
+            // "bca_va",
+            // "bni_va",
+            // "bri_va",
+            // "echannel",
+            // "other_va",
+            // "Indomaret",
+            // "alfamart",
+            // "akulaku"
+            $i = 1;
+            foreach ($request->input('daftar_tagihan_id') as $key => $value) {
+                # code...
+                $tagihan = Tagihan::find($value);
+
+                $getUser = User::find($request->input('user_id'));
+                $fee = $methode->percent == 1 ? ($request->input("total") * $methode->biayaTransaksi / 100) : $methode->biayaTransaksi;
+                $total = $request->input("total") + $fee;
+                $order_id = $getUser->nisn . '-' . $getUser->Transaksi->count();
+                $params = [
+                    'transaction_details' => [
+                        'order_id' => $order_id,
+                        'gross_amount' => $total,
+                    ],
+                    "item_details" => [
+                        [
+                            "id" => $i++,
+                            "price" => $request->input("total"),
+                            "quantity" => 1,
+                            "name" => DaftarTagihan::find($value)->first()->nama
+                        ],
+                        [
+                            "id" => $i++,
+                            "price" => $fee,
+                            "quantity" => 1,
+                            "name" => "Fee"
+                        ],
+                    ],
+                    'customer_details' => [
+                        'first_name' => $getUser->name,
+                        'last_name' => $getUser->nisn,
+                        'email' => $getUser->email,
+                        'phone' => $getUser->nomerHP,
+                    ],
+                    "enabled_payments" => [MethodePembayaran::find($request->input('methode_pembayaran_id'))->nama],
+
+                ];
+                // dd($params);
+
+                $snapToken = Snap::createTransaction($params);
+
+                $data = [
+                    "user_id" => $request->input('user_id'),
+                    "tanggal" => now(),
+                    "methode_pembayaran_id" => $methode->id,
+                    "tagihan_id" => $value,
+                    "fee" => $fee,
+                    "total" => $request->input("total"),
+                    "status" => 3,
+                    "order_id" => $order_id,
+                    "snapToken" => $snapToken->redirect_url,
+                ];
+
+                Transaksi::create($data);
+                // dd();
+                return redirect()->away($snapToken->redirect_url);
+
+                // header("Location:" . );
+                // dd($tagihan->DaftarTagihan->nominal);
+            }
+
+            return back()->with("success", "Transaksi Baru Berhasil Di Simpan");
+        }
     });
     Route::get('payment-methods', function () {
         $methods = MethodePembayaran::all();
