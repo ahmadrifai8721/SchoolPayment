@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Number;
 use Illuminate\Support\Facades\Auth;
+use App\Models\MethodePembayaran;
 
 /*
 |--------------------------------------------------------------------------
@@ -222,10 +223,40 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
     });
     Route::get('user/tagihan', function (Request $request) {
         // dd($request->nisn);
-        return response()->json(User::where("nisn", $request->nisn)->first()->Tagihan);
+        return response()->json(User::where("nisn", $request->nisn)->first()->Tagihan->where("status", 0)->get());
     });
     Route::get('user/all', function (Request $request) {
         return User::where("isAdmin", "0")->get(["id", "name", "nisn"]);
+    });
+    Route::post('payment', function (Request $request) {
+        $validated = $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'tagihan_id' => 'required|exists:tagihan,id',
+            'total' => 'required|numeric',
+            'methodePembayaran_id' => 'required|exists:methode_pembayaran,id',
+        ]);
+
+        $transaksi = Transaksi::create([
+            'user_id' => $validated['user_id'],
+            'tagihan_id' => $validated['tagihan_id'],
+            'total' => $validated['total'],
+            'methodePembayaran_id' => $validated['methodePembayaran_id'],
+            'status' => 2, // Assuming 2 means pending
+            'tanggal' => now(),
+        ]);
+
+        return response()->json([
+            'statusCode' => 200,
+            'message' => 'Payment initiated successfully',
+            'transaksi' => $transaksi,
+        ]);
+    });
+    Route::get('payment-methods', function () {
+        $methods = MethodePembayaran::all();
+        return response()->json([
+            'statusCode' => 200,
+            'methods' => $methods,
+        ]);
     });
 });
 Route::post('login', function (Request $request) {
