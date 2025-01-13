@@ -220,8 +220,11 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
     Route::get('user', function (Request $request) {
         return $request->user();
     });
+    Route::get('user/tagihan', function (Request $request) {
+        return $request->input();
+    });
     Route::get('user/all', function (Request $request) {
-        return User::where("isAdmin", "0")->get(["name", "nisn"]);
+        return User::where("isAdmin", "0")->get(["id", "name", "nisn"]);
     });
 });
 Route::post('login', function (Request $request) {
