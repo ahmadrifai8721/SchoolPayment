@@ -242,7 +242,7 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
             # code...
             $tagihan = Tagihan::find($request->tagihan_id);
             $data = [
-                "user_id" => $request->input('user_id'),
+                "user_id" =>  User::where("nisn", $request->input('user_id'))->first()->id,
                 "tanggal" => now(),
                 "methode_pembayaran_id" => $methode->id,
                 "tagihan_id" => $request->tagihan_id,
@@ -279,7 +279,7 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
             # code...
             $tagihan = Tagihan::find($request->tagihan_id);
 
-            $getUser = User::find($request->input('user_id'));
+            $getUser = User::where("nisn", $request->input('user_id'))->first();
             $fee = $methode->percent == 1 ? ($request->input("total") * $methode->biayaTransaksi / 100) : $methode->biayaTransaksi;
             $total = $request->input("total") + $fee;
             $order_id = $getUser->nisn . '-' . $getUser->Transaksi->count();
@@ -316,7 +316,7 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
             $snapToken = Snap::createTransaction($params);
 
             $data = [
-                "user_id" => $request->input('user_id'),
+                "user_id" => $getUser->id,
                 "tanggal" => now(),
                 "methode_pembayaran_id" => $methode->id,
                 "tagihan_id" => $request->tagihan_id,
