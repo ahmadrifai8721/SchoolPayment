@@ -276,67 +276,66 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
             // "alfamart",
             // "akulaku"
             $i = 1;
-                # code...
-                $tagihan = Tagihan::find($request->tagihan_id);
+            # code...
+            $tagihan = Tagihan::find($request->tagihan_id);
 
-                $getUser = User::find($request->input('user_id'));
-                $fee = $methode->percent == 1 ? ($request->input("total") * $methode->biayaTransaksi / 100) : $methode->biayaTransaksi;
-                $total = $request->input("total") + $fee;
-                $order_id = $getUser->nisn . '-' . $getUser->Transaksi->count();
-                $params = [
-                    'transaction_details' => [
-                        'order_id' => $order_id,
-                        'gross_amount' => $total,
+            $getUser = User::find($request->input('user_id'));
+            $fee = $methode->percent == 1 ? ($request->input("total") * $methode->biayaTransaksi / 100) : $methode->biayaTransaksi;
+            $total = $request->input("total") + $fee;
+            $order_id = $getUser->nisn . '-' . $getUser->Transaksi->count();
+            $params = [
+                'transaction_details' => [
+                    'order_id' => $order_id,
+                    'gross_amount' => $total,
+                ],
+                "item_details" => [
+                    [
+                        "id" => 1,
+                        "price" => $request->input("total"),
+                        "quantity" => 1,
+                        "name" => DaftarTagihan::find($request->tagihan_id)->first()->nama
                     ],
-                    "item_details" => [
-                        [
-                            "id" => 1,
-                            "price" => $request->input("total"),
-                            "quantity" => 1,
-                            "name" => DaftarTagihan::find($request->tagihan_id)->first()->nama
-                        ],
-                        [
-                            "id" =>2,
-                            "price" => $fee,
-                            "quantity" => 1,
-                            "name" => "Fee"
-                        ],
+                    [
+                        "id" => 2,
+                        "price" => $fee,
+                        "quantity" => 1,
+                        "name" => "Fee"
                     ],
-                    'customer_details' => [
-                        'first_name' => $getUser->name,
-                        'last_name' => $getUser->nisn,
-                        'email' => $getUser->email,
-                        'phone' => $getUser->nomerHP,
-                    ],
-                    "enabled_payments" => [MethodePembayaran::find($request->input('methode_pembayaran_id'))->nama],
+                ],
+                'customer_details' => [
+                    'first_name' => $getUser->name,
+                    'last_name' => $getUser->nisn,
+                    'email' => $getUser->email,
+                    'phone' => $getUser->nomerHP,
+                ],
+                "enabled_payments" => [MethodePembayaran::find($request->input('methode_pembayaran_id'))->nama],
 
-                ];
-                // dd($params);
+            ];
+            // dd($params);
 
-                $snapToken = Snap::createTransaction($params);
+            $snapToken = Snap::createTransaction($params);
 
-                $data = [
-                    "user_id" => $request->input('user_id'),
-                    "tanggal" => now(),
-                    "methode_pembayaran_id" => $methode->id,
-                    "tagihan_id" => $request->tagihan_id,
-                    "fee" => $fee,
-                    "total" => $request->input("total"),
-                    "status" => 3,
-                    "order_id" => $order_id,
-                    "snapToken" => $snapToken->redirect_url,
-                ];
+            $data = [
+                "user_id" => $request->input('user_id'),
+                "tanggal" => now(),
+                "methode_pembayaran_id" => $methode->id,
+                "tagihan_id" => $request->tagihan_id,
+                "fee" => $fee,
+                "total" => $request->input("total"),
+                "status" => 3,
+                "order_id" => $order_id,
+                "snapToken" => $snapToken->redirect_url,
+            ];
 
-                Transaksi::create($data);
-                // dd();
-                return redirect()->away($snapToken->redirect_url);
+            Transaksi::create($data);
+            // dd();
+            return redirect()->away($snapToken->redirect_url);
 
-                // header("Location:" . );
-                // dd($tagihan->DaftarTagihan->nominal);
-            }
-
-            return back()->with("success", "Transaksi Baru Berhasil Di Simpan");
+            // header("Location:" . );
+            // dd($tagihan->DaftarTagihan->nominal);
         }
+
+        return back()->with("success", "Transaksi Baru Berhasil Di Simpan");
     });
     Route::get('payment-methods', function () {
         $methods = MethodePembayaran::all();
