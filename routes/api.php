@@ -221,7 +221,7 @@ Route::prefix("mobile")->middleware("auth:sanctum")->group(function () {
         return $request->user();
     });
     Route::get('user/tagihan', function (Request $request) {
-        return $request->input();
+        return User::where("nisn", $request->nisn)->first()->Tagihan;
     });
     Route::get('user/all', function (Request $request) {
         return User::where("isAdmin", "0")->get(["id", "name", "nisn"]);
